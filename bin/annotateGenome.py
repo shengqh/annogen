@@ -88,8 +88,11 @@ def annotate(args, logger):
     missing_chrs = set(missing_chrs)
 
     queries = [q for q in queries if q[0][0] not in missing_chrs]
-    logger.info("processing %d valid queries ..." % len(queries))
+
+    logger.info("sorting queries ...")
+    queries = sorted(queries, key = lambda x: (x[0], x[1]))
   
+    logger.info("processing %d valid queries ..." % len(queries))
     lastChrom = ""
     with open(args.output, "w") as fout:
       fout.write(inputHeader + "\t" + slimAnnoHeader + "\n")
@@ -138,29 +141,19 @@ def annotate(args, logger):
 
   if args.track:
     realpath = os.path.dirname(os.path.realpath(__file__))
-    bedClipPath = realpath + "/bedClip"
     bwPath = realpath + "/bedGraphToBigWig"
     for idx, anno in enumerate(annoParts):
       annoIndex = inputHeaderColNumber + 6 + idx * 7
       annoPrefix = args.output + "_" + getValidFilename(anno) + "_median";
       annoFile =  annoPrefix + ".bdg"
-      annoSlopFile =  annoFile + ".slop"
-      annoClipFile = annoSlopFile + ".clip"
-      annoSortFile = annoClipFile + ".sort"
       annoBwFile = annoPrefix + ".bw"
       
       if not args.ignore_exist or not os.path.isfile(annoBwFile):
         runCommand("cut -f1,2,3," + str(annoIndex) + " " + args.output + " > " + annoFile, logger)
-        runCommand("bedtools slop -i " + annoFile + " -g " + args.genome + " -b 0 > " + annoSlopFile, logger)
-        runCommand(bedClipPath + " " + annoSlopFile + " " + args.genome + " " + annoClipFile, logger)
-        runCommand("sort -k1,1 -k2,2n " + annoClipFile + " > " + annoSortFile, logger)
-        runCommand(bwPath + " " + annoSortFile + " " + args.genome + " " + annoBwFile, logger)
+        runCommand(bwPath + " " + annoFile + " " + args.genome + " " + annoBwFile, logger)
 
         if os.path.isfile(annoBwFile):
           os.remove(annoFile)
-          os.remove(annoSlopFile)
-          os.remove(annoClipFile)
-          os.remove(annoSortFile)
     
   with open(args.output + ".done", "w") as fout:
     fout.write("done.")
