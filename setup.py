@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="annotateGenome_shengqh",
-    version="0.0.1",
+    version="0.0.2",
     author="Quanhu Sheng",
     author_email="quanhu.sheng.1@vumc.org",
     description="Annotate bed file with genome information",
@@ -17,7 +17,7 @@ setuptools.setup(
     },
     packages=setuptools.find_packages(),
     install_requires=['argparse', 'pytabix', 'numpy'],
-    data_files=[('bin', ['bin/bedClip','bin/bedGraphToBigWig'])],
+    data_files=[('bin', ['bin/bedGraphToBigWig'])],
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 2",
