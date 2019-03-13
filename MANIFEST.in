@@ -1,2 +1,1 @@
-include bin/bedClip
 include bin/bedGraphToBigWig
