@@ -40,6 +40,18 @@ def runCommand(command, logger):
   logger.info("run : " + command )
   os.system(command)
   
+def getIntegralAverage(values):
+  vlen = len(values)
+  if vlen == 1:
+    return values[0]
+  result = 0.0
+  for idx in range(0, vlen-2):
+    result = result + (values[idx] + values[idx+1])
+  result = result / 2
+  if vlen > 2:
+    result = result / (vlen - 1)
+  return result 
+  
 def annotate(args, logger):
   logger.info("start ...")
   logger.info(str(args))
@@ -54,8 +66,8 @@ def annotate(args, logger):
     annoHeader = f.readline().rstrip()
   
   annoParts = annoHeader.split('\t')[3:]
-  slimAnnoHeader = "EntryInDB\t" + "\t".join(["\t".join([anno + "_mean", anno + "_sd", anno + "_perc0", anno + "_perc25", anno + "_median", anno + "_perc75", anno + "_perc100"])  for anno in annoParts])
-  emptyAnno = "\t" + "\t".join(["\t\t\t\t\t\t" for anno in annoParts])
+  slimAnnoHeader = "EntryInDB\t" + "\t".join(["\t".join([anno + "_mean", anno + "_sd", anno + "_perc0", anno + "_perc25", anno + "_median", anno + "_perc75", anno + "_perc100", anno + "_integralAverage"])  for anno in annoParts])
+  emptyAnno = "\t" + "\t".join(["\t\t\t\t\t\t\t" for anno in annoParts])
 
   inputHeader = ""
   inputHeaderColNumber = 0
@@ -136,7 +148,8 @@ def annotate(args, logger):
           mean = np.mean(values)
           sd = np.std(values)
           perc = np.percentile(values, [0, 25, 50, 75, 100])
-          fout.write("\t%f\t%f\t%f\t%f\t%f\t%f\t%f" % (mean, sd, perc[0], perc[1], perc[2], perc[3], perc[4]))
+          ia = getIntegralAverage(values)
+          fout.write("\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f" % (mean, sd, perc[0], perc[1], perc[2], perc[3], perc[4], ia))
         fout.write("\n")
 
   if args.track:
@@ -144,7 +157,7 @@ def annotate(args, logger):
     #bwPath = realpath + "/../bin/bedGraphToBigWig"
     bwPath = "bedGraphToBigWig"
     for idx, anno in enumerate(annoParts):
-      annoIndex = inputHeaderColNumber + 6 + idx * 7
+      annoIndex = inputHeaderColNumber + 6 + idx * 8
       annoPrefix = args.output + "_" + getValidFilename(anno) + "_median";
       annoFile =  annoPrefix + ".bdg"
       annoBwFile = annoPrefix + ".bw"
