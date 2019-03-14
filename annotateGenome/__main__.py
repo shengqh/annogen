@@ -140,8 +140,9 @@ def annotate(args, logger):
         fout.write("\n")
 
   if args.track:
-    realpath = os.path.dirname(os.path.realpath(__file__))
-    bwPath = realpath + "/../bin/bedGraphToBigWig"
+    #realpath = os.path.dirname(os.path.realpath(__file__))
+    #bwPath = realpath + "/../bin/bedGraphToBigWig"
+    bwPath = "bedGraphToBigWig"
     for idx, anno in enumerate(annoParts):
       annoIndex = inputHeaderColNumber + 6 + idx * 7
       annoPrefix = args.output + "_" + getValidFilename(anno) + "_median";
