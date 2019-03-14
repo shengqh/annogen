@@ -8,21 +8,22 @@ import gzip
 import numpy as np
 import subprocess
 
-def initialize_logger(logfile):
+def initialize_logger(logfile, args):
   logger = logging.getLogger('genomeAnno')
-  logger.setLevel(logging.DEBUG)
+  loglevel = logging.DEBUG if args.debug else logging.INFO
+  logger.setLevel(loglevel)
 
   formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)-8s - %(message)s')    
  
   # create console handler and set level to info
   handler = logging.StreamHandler()
-  handler.setLevel(logging.DEBUG)
+  handler.setLevel(loglevel)
   handler.setFormatter(formatter)
   logger.addHandler(handler)
  
   # create error file handler and set level to error
   handler = logging.FileHandler(logfile, "w")
-  handler.setLevel(logging.INFO)
+  handler.setLevel(loglevel)
   handler.setFormatter(formatter)
   logger.addHandler(handler)
  
@@ -90,7 +91,7 @@ def annotate(args, logger):
     queries = [q for q in queries if q[0][0] not in missing_chrs]
 
     logger.info("sorting queries ...")
-    queries = sorted(queries, key = lambda x: (x[0], x[1]))
+    queries = sorted(queries, key = lambda x: (x[0][0], int(x[0][1]), int(x[0][2])))
   
     logger.info("processing %d valid queries ..." % len(queries))
     lastChrom = ""
@@ -131,7 +132,6 @@ def annotate(args, logger):
         fout.write(linestr + "\t" + str(len(records)))
         logger.debug(linestr)
         for idx in range(3, len(records[0])):
-        #print(str(idx) + ":" + ",".join([record[idx] for record in records]))
           values = [float(record[idx]) for record in records]
           mean = np.mean(values)
           sd = np.std(values)
@@ -141,7 +141,7 @@ def annotate(args, logger):
 
   if args.track:
     realpath = os.path.dirname(os.path.realpath(__file__))
-    bwPath = realpath + "/bedGraphToBigWig"
+    bwPath = realpath + "/../bin/bedGraphToBigWig"
     for idx, anno in enumerate(annoParts):
       annoIndex = inputHeaderColNumber + 6 + idx * 7
       annoPrefix = args.output + "_" + getValidFilename(anno) + "_median";
@@ -149,8 +149,8 @@ def annotate(args, logger):
       annoBwFile = annoPrefix + ".bw"
       
       if not args.ignore_exist or not os.path.isfile(annoBwFile):
-        runCommand("cut -f1,2,3," + str(annoIndex) + " " + args.output + " > " + annoFile, logger)
-        runCommand(bwPath + " " + annoFile + " " + args.genome + " " + annoBwFile, logger)
+        runCommand("cut -f1,2,3," + str(annoIndex) + " \"" + args.output + "\" > \"" + annoFile + "\"", logger)
+        runCommand(bwPath + " \"" + annoFile + "\" \"" + args.genome + "\" \"" + annoBwFile + "\"", logger)
 
         if os.path.isfile(annoBwFile):
           os.remove(annoFile)
@@ -173,6 +173,7 @@ def main():
   parser.add_argument('-t', '--track', action='store_true', help="Generate IGV track files", default=False)
   parser.add_argument('-g', '--genome', action='store', nargs='?', help="Genome size file for building IGV track")
   parser.add_argument('--ignore_exist', action='store_true', help="Ignore the result which is exist", default=False)
+  parser.add_argument('--debug', action='store_true', help="Output debug information", default=False)
   
   if not DEBUG and len(sys.argv)==1:
     parser.print_help()
@@ -186,6 +187,7 @@ def main():
     args.output="/scratch/cqs/shengq2/guoyan/20190131_genome_annotation/input.anno.txt"
     args.track=True
     args.genome="/home/shengq2/program/projects/guoyan/20190204_genome_annotation/hg38.sizes.genome"
+    args.debug=True
 
   if args.output is None:
     args.output = args.input + ".genome_anno.tsv"
@@ -195,7 +197,7 @@ def main():
       print "error: argument -g/--genome is required to generate IGV track files"
       sys.exit(1)
   
-  logger = initialize_logger(args.output + ".log")
+  logger = initialize_logger(args.output + ".log", args)
   annotate(args, logger)
   
 if __name__ == "__main__":
