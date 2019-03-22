@@ -184,7 +184,7 @@ def annotate(args, logger):
     #realpath = os.path.dirname(os.path.realpath(__file__))
     #bwPath = realpath + "/../bin/bedGraphToBigWig"
     bwPath = "bedGraphToBigWig"
-    bwCreated = False
+    bwCreated = True
     for idx, anno in enumerate(annoParts):
       annoIndex = inputHeaderColNumber + 6 + idx * 8
       annoPrefix = args.output + "_" + getValidFilename(anno) + "_median";
@@ -196,8 +196,9 @@ def annotate(args, logger):
         runCommand(bwPath + " \"" + annoFile + "\" \"" + args.genome + "\" \"" + annoBwFile + "\"", logger)
 
         if os.path.isfile(annoBwFile):
-          bwCreated = True
           os.remove(annoFile)
+          
+      bwCreated = bwCreated and os.path.isfile(annoBwFile)
     
     if bwCreated:
       os.remove(noOverlapFile)

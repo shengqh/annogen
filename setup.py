@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="annotateGenome",
-    version="0.0.6",
+    version="0.0.7",
     author="Quanhu Sheng",
     author_email="quanhu.sheng.1@vumc.org",
     description="Annotate bed file with genome information",
