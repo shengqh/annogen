@@ -153,6 +153,25 @@ def annotate(args, logger):
         fout.write("\n")
 
   if args.track:
+    #make sure there is no overlap in file
+    noOverlapFile = args.output + ".nooverlap"
+    with open(args.output, "r") as fin:
+      with open(noOverlapFile, "w") as fout:
+        fout.write(fin.readline())
+        lastParts = ['0', 0, 0]
+        for line in fin:
+          parts = line.split('\t')
+          
+          if parts[0] == lastParts[0]:
+            start = int(parts[1])
+            end = int(parts[2])
+            if start <= lastParts[2]:
+              logger.info("Removed due to overlap: %s" % line.rstrip())
+              continue
+          
+          fout.write(line)
+          lastParts = [parts[0], start, end]
+            
     #realpath = os.path.dirname(os.path.realpath(__file__))
     #bwPath = realpath + "/../bin/bedGraphToBigWig"
     bwPath = "bedGraphToBigWig"
@@ -163,7 +182,7 @@ def annotate(args, logger):
       annoBwFile = annoPrefix + ".bw"
       
       if not args.ignore_exist or not os.path.isfile(annoBwFile):
-        runCommand("cut -f1,2,3," + str(annoIndex) + " \"" + args.output + "\" > \"" + annoFile + "\"", logger)
+        runCommand("cut -f1,2,3," + str(annoIndex) + " \"" + noOverlapFile + "\" > \"" + annoFile + "\"", logger)
         runCommand(bwPath + " \"" + annoFile + "\" \"" + args.genome + "\" \"" + annoBwFile + "\"", logger)
 
         if os.path.isfile(annoBwFile):
