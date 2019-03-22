@@ -153,9 +153,38 @@ def annotate(args, logger):
         fout.write("\n")
 
   if args.track:
+    #make sure there is no overlap in file
+    noOverlapFile = args.output + ".nooverlap"
+    with open(args.output, "r") as fin:
+      with open(noOverlapFile, "w") as fout:
+        fout.write(fin.readline())
+        lastParts = ['0', 0, 0, '']
+        for line in fin:
+          parts = line.split('\t')
+          istart = int(parts[1])
+          iend = int(parts[2])
+
+          if parts[0] == lastParts[0]:
+            if istart == lastParts[1]:
+              logger.info("Removed due to overlap: %s:%d-%d with %s:%d-%d" % (lastParts[0], lastParts[1], lastParts[2], parts[0], istart, iend))
+              lastParts = [parts[0], istart, iend, line]
+              continue
+
+            if istart <= lastParts[2]:
+              logger.info("Removed due to overlap: %s:%d-%d with %s:%d-%d" % (parts[0], istart, iend, lastParts[0], lastParts[1], lastParts[2]))
+              continue
+
+          if lastParts[3] != '':
+            fout.write(lastParts[3])
+          lastParts = [parts[0], istart, iend, line]
+
+        if lastParts[3] != '':
+          fout.write(lastParts[3])
+
     #realpath = os.path.dirname(os.path.realpath(__file__))
     #bwPath = realpath + "/../bin/bedGraphToBigWig"
     bwPath = "bedGraphToBigWig"
+    bwCreated = False
     for idx, anno in enumerate(annoParts):
       annoIndex = inputHeaderColNumber + 6 + idx * 8
       annoPrefix = args.output + "_" + getValidFilename(anno) + "_median";
@@ -163,11 +192,15 @@ def annotate(args, logger):
       annoBwFile = annoPrefix + ".bw"
       
       if not args.ignore_exist or not os.path.isfile(annoBwFile):
-        runCommand("cut -f1,2,3," + str(annoIndex) + " \"" + args.output + "\" > \"" + annoFile + "\"", logger)
+        runCommand("cut -f1,2,3," + str(annoIndex) + " \"" + noOverlapFile + "\" > \"" + annoFile + "\"", logger)
         runCommand(bwPath + " \"" + annoFile + "\" \"" + args.genome + "\" \"" + annoBwFile + "\"", logger)
 
         if os.path.isfile(annoBwFile):
+          bwCreated = True
           os.remove(annoFile)
+    
+    if bwCreated:
+      os.remove(noOverlapFile)
     
   with open(args.output + ".done", "w") as fout:
     fout.write("done.")
