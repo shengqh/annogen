@@ -18,7 +18,7 @@ cmpr2in <- function(file1, fileName1, file2, fileName2, outputPrefix, regionLoc=
   files<-c(file1, file2)
   names<-c(fileName1, fileName2)
   ####################### Read in python-annotated files & derive GC% ###################
-  intv.ls2 <- lapply(files),
+  intv.ls2 <- lapply(files,
   function(x) {
     anno <- read.delim(x,check.names=F,as.is=T)
     gc_mean <- anno[,'G%_mean']+anno[,'C%_mean']
