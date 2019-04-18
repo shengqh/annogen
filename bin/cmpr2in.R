@@ -14,9 +14,11 @@ sdFeatures <- matrix(sdFeatures,nc=3,dimnames=dimnames(mnFeatures))
 ### regionLoc: directory where bed files for three types of genomic regions are stored.
 ### INPUT mn & sd: mean & sd statistics of 4*3 background distributions (feature4 by region3)
 ### NOTE currently I adopt the mean feature score (instead of median, 25%, etc.)
-cmpr2in <- function(stem1='H3K27ac.bed',stem2='H3K9me3.bed',regionLoc='./',mn=mnFeatures,sd=sdFeatures) {
+cmpr2in <- function(file1, fileName1, file2, fileName2, outputPrefix, regionLoc='./',mn=mnFeatures,sd=sdFeatures) {
+  files<-c(file1, file2)
+  names<-c(fileName1, fileName2)
 	####################### Read in python-annotated files & derive GC% ###################
-	intv.ls2 <- lapply(paste( c(stem1,stem2),'genome_anno.tsv',sep='.' ),
+	intv.ls2 <- lapply(files),
 		function(x) {
 			anno <- read.delim(x,check.names=F,as.is=T)
 			gc_mean <- anno[,'G%_mean']+anno[,'C%_mean']
@@ -28,12 +30,12 @@ cmpr2in <- function(stem1='H3K27ac.bed',stem2='H3K9me3.bed',regionLoc='./',mn=mn
 	intv2 <- intv.ls2[[2]]
 	################## Discern genomic regions of input intervals #################
 	library(GenomicRanges)
-	gr2 <- lapply(intv.ls2,deriveGRfrItv); names(gr2) <- c(stem1,stem2)
+	gr2 <- lapply(intv.ls2,deriveGRfrItv); names(gr2) <- names
 	regions <- c('introns','exons','intergene')
 	rFiles <- paste(regionLoc,paste0('HG38.',regions,'.bed'),sep='/')
 	GR3 <- lapply(rFiles,deriveGRfrBed); names(GR3) <- regions
-	regionSum <- matrix(0,nr=2,nc=length(regions),dimnames=list(c(stem1,stem2),regions )  )
-	for (input in c(stem1,stem2)) {
+	regionSum <- matrix(0,nr=2,nc=length(regions),dimnames=list(names,regions )  )
+	for (input in names) {
 		gr <- gr2[[input]]
 		for (region in regions) {
 			GR <- GR3[[region]]
@@ -66,7 +68,7 @@ cmpr2in <- function(stem1='H3K27ac.bed',stem2='H3K9me3.bed',regionLoc='./',mn=mn
 		vars <- subNames[[feature]]#paste0('Entropy',c(2,3,4))
 		col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], paste(vars,'mean',sep='_') )
 		pdf(paste0(feature,'.pdf'))
-		plot_a_feature(col.ls2,c(stem1,stem2),vars,mn,sd)
+		plot_a_feature(col.ls2,names,vars,mn,sd)
 		dev.off()
 		# Statistical comparison of basewise scores through Wilcoxon & KS test
 		for (subf in subNames[[feature]]) {
@@ -74,8 +76,8 @@ cmpr2in <- function(stem1='H3K27ac.bed',stem2='H3K9me3.bed',regionLoc='./',mn=mn
 			cmprTbl[subf,] <- itvCmpr_a_subf(subf.ls2)
 		}		
 	}
-	write.table(regionSum,paste0(stem1,'_',stem2,'_regionSum.tsv'),col.names=NA,quote=F,sep='\t')
-	write.table(cmprTbl,paste0(stem1,'_',stem2,'_cmpr.tsv'),col.names=NA,quote=F,sep='\t')
+	write.table(regionSum,paste0(outputPrefix, '_regionSum.tsv'),col.names=NA,quote=F,sep='\t')
+	write.table(cmprTbl,paste0(outputPrefix,'_cmpr.tsv'),col.names=NA,quote=F,sep='\t')
 	cmprTbl
 }
 deriveGRfrItv <- function(itvMore) {
@@ -161,5 +163,20 @@ plot_a_feature <- function(ls2,stemName2,subNames,mn=mnFeatures,sd=sdFeatures) {
   do.call('grid.arrange',c(pS,nrow=1))
 }
 
-args <- commandArgs(T)
-cmpred <- cmpr2in(args[1],args[2])
+require(docopt)
+'Usage:
+   cmpr2in.R [-c <control> --controlName <controlName> -s <sample> --sampleName <sampleName> -o <outputPrefix>]
+
+Options:
+   -h --help     Show this screen.
+   -c            Control file.
+   --controlName Control name.
+   -s            Sample file.
+   --sampleName  Sample name.
+   -o            Output file prefix
+
+ ]' -> doc
+
+opts <- docopt(doc)
+print(opts)
+cmpred <- cmpr2in(opts$c, opts$controlName, opts$s, opts$sampleName, opts$o)
