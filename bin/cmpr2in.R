@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 #cmpr2in.R
 ### Assuming interval-level annotation files (*1.genome_anno.tsv & *2.genome_anno.tsv) are ready as result of parental PY script.
 ### stem1,stem2 = TWO STRINGS AS STEM NAMES FOR THE USER INPUT FILE 1 & 2
