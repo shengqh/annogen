@@ -215,7 +215,7 @@ def annotate(args, logger):
     rPath = "cmpr2in.R"
     controlName = os.path.splitext(os.path.basename(args.controlInput))[0]
     sampleName = os.path.splitext(os.path.basename(args.input))[0]
-    runCommand(rPath + " -c \"" + args.controlOutput + "\" --controlName " + controlName + " -s \"" + args.output + "\" --sampleName " + sampleName + " -o \"" + args.comparisonOutput + "\"", logger)
+    runCommand(rPath + " -c \"" + args.controlOutput + "\" --controlName " + controlName + " -s \"" + args.output + "\" --sampleName " + sampleName + " -o " + args.comparisonOutputPrefix, logger)
         
 def main():
   parser = argparse.ArgumentParser(description="Annoate genome info.",
@@ -233,7 +233,7 @@ def main():
   parser.add_argument('--controlInput', action='store', nargs='?', help="Control input locus file (chr, start, end, splited by tab)")
   parser.add_argument('--controlName', action='store', nargs='?', help="Control name")
   parser.add_argument('--controlOutput', action='store', nargs='?', help="Control output annotated file")
-  parser.add_argument('--comparisonOutput', action='store', nargs='?', help="Comparison output of control and input")
+  parser.add_argument('--comparisonOutputPrefix', action='store', nargs='?', help="Comparison output prefix of control and input")
   parser.add_argument('--ignore_exist', action='store_true', help="Ignore the result which is exist", default=False)
   parser.add_argument('--debug', action='store_true', help="Output debug information", default=False)
   
@@ -264,10 +264,8 @@ def main():
     if args.controlName is None:
       args.controlName = os.path.splitext(os.path.basename(args.controlInput))[0]
       
-    if args.comparisonOutput is None:
-      print "error: arguments --comparisonOutput are required for comparison"
-      parser.print_help()
-      sys.exit(1)
+    if args.comparisonOutputPrefix is None:
+      args.comparisonOutputPrefix = args.inputName + "_vs_" + args.controlName
 
   if args.track:
     if args.genome is None:
