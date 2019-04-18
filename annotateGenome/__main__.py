@@ -52,33 +52,17 @@ def getIntegralAverage(values):
     result = result / (vlen - 1)
   return result 
   
-def annotate(args, logger):
-  logger.info("start ...")
-  logger.info(str(args))
- 
-  doneFile = args.output + ".done"
-  if os.path.isfile(doneFile):
-    os.remove(doneFile)
-
-  annoHeader = ""
-  dbchr1 = getDatabase(args.database, "1")
-  with gzip.open(dbchr1,'rt') as f:
-    annoHeader = f.readline().rstrip()
-  
-  annoParts = annoHeader.split('\t')[3:]
-  slimAnnoHeader = "EntryInDB\t" + "\t".join(["\t".join([anno + "_mean", anno + "_sd", anno + "_perc0", anno + "_perc25", anno + "_median", anno + "_perc75", anno + "_perc100", anno + "_integralAverage"])  for anno in annoParts])
-  emptyAnno = "\t" + "\t".join(["\t\t\t\t\t\t\t" for anno in annoParts])
-
+def doAnnotate(annoParts, slimAnnoHeader, emptyAnno, input, output, args, logger):
   inputHeader = ""
   inputHeaderColNumber = 0
   queries = []
-  logger.info("reading input file: " + args.input + " ...")
-  with open(args.input, "r") as fin:
+  logger.info("reading input file: " + input + " ...")
+  with open(input, "r") as fin:
     inputHeader = fin.readline().rstrip()
     parts = inputHeader.split('\t')
     inputHeaderColNumber = len(parts)
     
-    if not args.ignore_exist or not os.path.isfile(args.output):
+    if not args.ignore_exist or not os.path.isfile(output):
       if (re.match("^\d+$", parts[1]) is not None) and (re.match("^\d+$", parts[2]) is not None): #no header in bed file
         logger.info("no headerline detected in input file")
         queries.append([parts, inputHeader])
@@ -92,7 +76,7 @@ def annotate(args, logger):
         parts = linestr.split('\t')
         queries.append([parts, linestr])
 
-  if not args.ignore_exist or not os.path.isfile(args.output):
+  if not args.ignore_exist or not os.path.isfile(output):
     logger.info("filtering queries ...")
     chroms = set(query[0][0] for query in queries)
     missing_chrs = [chrom for chrom in chroms if not os.path.isfile(getDatabase(args.database, chrom))]
@@ -107,7 +91,7 @@ def annotate(args, logger):
   
     logger.info("processing %d valid queries ..." % len(queries))
     lastChrom = ""
-    with open(args.output, "w") as fout:
+    with open(output, "w") as fout:
       fout.write(inputHeader + "\t" + slimAnnoHeader + "\n")
       for query in queries:
         parts = query[0]
@@ -154,8 +138,8 @@ def annotate(args, logger):
 
   if args.track:
     #make sure there is no overlap in file
-    noOverlapFile = args.output + ".nooverlap"
-    with open(args.output, "r") as fin:
+    noOverlapFile = output + ".nooverlap"
+    with open(output, "r") as fin:
       with open(noOverlapFile, "w") as fout:
         fout.write(fin.readline())
         lastParts = ['0', 0, 0, '']
@@ -187,7 +171,7 @@ def annotate(args, logger):
     bwCreated = True
     for idx, anno in enumerate(annoParts):
       annoIndex = inputHeaderColNumber + 6 + idx * 8
-      annoPrefix = args.output + "_" + getValidFilename(anno) + "_median";
+      annoPrefix = output + "_" + getValidFilename(anno) + "_median";
       annoFile =  annoPrefix + ".bdg"
       annoBwFile = annoPrefix + ".bw"
       
@@ -203,10 +187,35 @@ def annotate(args, logger):
     if bwCreated:
       os.remove(noOverlapFile)
     
-  with open(args.output + ".done", "w") as fout:
+  with open(output + ".done", "w") as fout:
     fout.write("done.")
 
-  logger.info("done.")
+  logger.info("analyze " + input + " done.")
+
+def annotate(args, logger):
+  logger.info("start ...")
+  logger.info(str(args))
+ 
+  doneFile = args.output + ".done"
+  if os.path.isfile(doneFile):
+    os.remove(doneFile)
+
+  dbchr1 = getDatabase(args.database, "1")
+  with gzip.open(dbchr1,'rt') as f:
+    annoHeader = f.readline().rstrip()
+  
+  annoParts = annoHeader.split('\t')[3:]
+  slimAnnoHeader = "EntryInDB\t" + "\t".join(["\t".join([anno + "_mean", anno + "_sd", anno + "_perc0", anno + "_perc25", anno + "_median", anno + "_perc75", anno + "_perc100", anno + "_integralAverage"])  for anno in annoParts])
+  emptyAnno = "\t" + "\t".join(["\t\t\t\t\t\t\t" for anno in annoParts])
+
+  doAnnotate(annoParts, slimAnnoHeader, emptyAnno, args.input, args.output, args, logger)
+  
+  if(args.controlInput is not None) and (args.controlOutput is not None) and (args.comparisonOutput is not None):
+    doAnnotate(annoParts, slimAnnoHeader, emptyAnno, args.controlInput, args.controlOutput, args, logger)
+    rPath = "cmpr2in.R"
+    controlName = os.path.splitext(os.path.basename(args.controlInput))[0]
+    sampleName = os.path.splitext(os.path.basename(args.input))[0]
+    runCommand(rPath + " -c \"" + args.controlOutput + "\" --controlName " + controlName + " -s \"" + args.output + "\" --sampleName " + sampleName + " -o \"" + args.comparisonOutput + "\"", logger)
         
 def main():
   parser = argparse.ArgumentParser(description="Annoate genome info.",
@@ -217,9 +226,14 @@ def main():
   
   parser.add_argument('-d', '--database', action='store', nargs='?', help='Input database folder', required=NOT_DEBUG)
   parser.add_argument('-i', '--input', action='store', nargs='?', help="Input locus file (chr, start, end, splited by tab)", required=NOT_DEBUG)
+  parser.add_argument('--inputName', action='store', nargs='?', help="Input name")
   parser.add_argument('-o', '--output', action='store', nargs='?', help="Output annotated file")
   parser.add_argument('-t', '--track', action='store_true', help="Generate IGV track files", default=False)
   parser.add_argument('-g', '--genome', action='store', nargs='?', help="Genome size file for building IGV track")
+  parser.add_argument('--controlInput', action='store', nargs='?', help="Control input locus file (chr, start, end, splited by tab)")
+  parser.add_argument('--controlName', action='store', nargs='?', help="Control name")
+  parser.add_argument('--controlOutput', action='store', nargs='?', help="Control output annotated file")
+  parser.add_argument('--comparisonOutput', action='store', nargs='?', help="Comparison output of control and input")
   parser.add_argument('--ignore_exist', action='store_true', help="Ignore the result which is exist", default=False)
   parser.add_argument('--debug', action='store_true', help="Output debug information", default=False)
   
@@ -240,9 +254,21 @@ def main():
   if args.output is None:
     args.output = args.input + ".genome_anno.tsv"
 
+  if args.inputName is None:
+    args.inputName = os.path.splitext(os.path.basename(args.input))[0]
+
+  if args.controlInput is not None:
+    if args.controlName is None:
+      args.controlName = os.path.splitext(os.path.basename(args.controlInput))[0]
+    if (args.controlOutput is None) or (args.comparisonOutput is None):
+      print "error: arguments --controlOutput and --comparisonOutput are required for comparison"
+      parser.print_help()
+      sys.exit(1)
+
   if args.track:
     if args.genome is None:
       print "error: argument -g/--genome is required to generate IGV track files"
+      parser.print_help()
       sys.exit(1)
   
   logger = initialize_logger(args.output + ".log", args)
