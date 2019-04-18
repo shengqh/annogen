@@ -258,10 +258,14 @@ def main():
     args.inputName = os.path.splitext(os.path.basename(args.input))[0]
 
   if args.controlInput is not None:
+    if args.controlOutput is None:
+      args.controlOutput = args.controlInput + ".genome_anno.tsv"
+      
     if args.controlName is None:
       args.controlName = os.path.splitext(os.path.basename(args.controlInput))[0]
-    if (args.controlOutput is None) or (args.comparisonOutput is None):
-      print "error: arguments --controlOutput and --comparisonOutput are required for comparison"
+      
+    if args.comparisonOutput is None:
+      print "error: arguments --comparisonOutput are required for comparison"
       parser.print_help()
       sys.exit(1)
 
