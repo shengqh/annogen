@@ -19,7 +19,6 @@ setuptools.setup(
     package_data={'annotateGenome': ['data/*.bed']},
     install_requires=['argparse', 'pytabix', 'numpy'],
     data_files=[('bin', ['bin/bedGraphToBigWig', 'bin/cmpr2in.R'])],
-    include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 2",
         "License :: OSI Approved :: MIT License",
