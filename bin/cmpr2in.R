@@ -17,7 +17,7 @@ cmpr2in <- function(stem1='H3K27ac.bed',stem2='H3K9me3.bed',regionLoc='./',mn=mn
 	intv.ls2 <- lapply(paste( c(stem1,stem2),'genome_anno.tsv',sep='.' ),
 		function(x) {
 			anno <- read.delim(x,check.names=F,as.is=T)
-			gc_mean <- anno[,'C%_mean']+anno[,'C%_mean']
+			gc_mean <- anno[,'G%_mean']+anno[,'C%_mean']
 			anno <- data.frame(anno,gc_mean=gc_mean)
 			anno
 		}
