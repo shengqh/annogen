@@ -1,1 +1,1 @@
-include data *.bed
+include data/*.bed
