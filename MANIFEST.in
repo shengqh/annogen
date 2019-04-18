@@ -1,1 +1,3 @@
 include bin/bedGraphToBigWig
+include bin/cmpr2in.R
+include data/*.bed
