@@ -210,12 +210,10 @@ def annotate(args, logger):
 
   doAnnotate(annoParts, slimAnnoHeader, emptyAnno, args.input, args.output, args, logger)
   
-  if(args.controlInput is not None) and (args.controlOutput is not None) and (args.comparisonOutput is not None):
+  if args.controlInput is not None:
     doAnnotate(annoParts, slimAnnoHeader, emptyAnno, args.controlInput, args.controlOutput, args, logger)
     rPath = "cmpr2in.R"
-    controlName = os.path.splitext(os.path.basename(args.controlInput))[0]
-    sampleName = os.path.splitext(os.path.basename(args.input))[0]
-    runCommand(rPath + " -c \"" + args.controlOutput + "\" --controlName " + controlName + " -s \"" + args.output + "\" --sampleName " + sampleName + " -o " + args.comparisonOutputPrefix, logger)
+    runCommand(rPath + " -c \"" + args.controlOutput + "\" --controlName " + args.controlName + " -s \"" + args.output + "\" --sampleName " + args.inputName + " -o " + args.comparisonOutputPrefix, logger)
         
 def main():
   parser = argparse.ArgumentParser(description="Annoate genome info.",
