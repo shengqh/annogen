@@ -16,7 +16,6 @@ setuptools.setup(
         'console_scripts': ['annotateGenome=annotateGenome.__main__:main'],
     },
     packages=setuptools.find_packages(),
-    package_data={'annotateGenome': ['data/*.bed']},
     install_requires=['argparse', 'pytabix', 'numpy'],
     data_files=[('bin', ['bin/bedGraphToBigWig', 'bin/cmpr2in.R'])],
     classifiers=[
