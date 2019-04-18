@@ -17,7 +17,8 @@ setuptools.setup(
     },
     packages=setuptools.find_packages(),
     install_requires=['argparse', 'pytabix', 'numpy'],
-    data_files=[('bin', ['bin/bedGraphToBigWig', 'bin/cmpr2in.R'])],
+    data_files=[('bin', ['bin/bedGraphToBigWig', 'bin/cmpr2in.R']),
+                ('data', ['data/HG38.exons.bed', 'data/HG38.intergene.bed', 'data/HG38.introns.bed'])],
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 2",
