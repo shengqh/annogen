@@ -1,6 +1,11 @@
 ---
 title: "Genomic Features between Two Range Sets"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+params:
+  data: options
 ---
 
 ```{r setup, include=FALSE}
@@ -81,13 +86,13 @@ R_comp_ftPlot <- function(ls2,infiles2,subNames=subNames0,mn=mnFeatures,sd=sdFea
 ### INPUT regionLoc: directory where bed files for three types of genomic regions are stored.
 ### INPUT mn & sd: mean & sd statistics of 4*3 background distributions (feature4 by region3)
 ### NOTE currently I adopt the mean feature score (instead of median, 25%, etc.)
-R_comp_table <- function(itv1,itv2,infiles2,regionLoc='./',subNames=subNames0,mn=mnFeatures,sd=sdFeatures) {
+R_comp_table <- function(itv1,itv2,infiles2,regionLoc,subNames=subNames0,mn=mnFeatures,sd=sdFeatures) {
 	####################### Read in python-annotated files & derive GC% ###################
 	################## Discern genomic regions of input intervals #################
 	library(GenomicRanges)
 	gr2 <- lapply(intv.ls2,deriveGRfrItv); names(gr2) <- c(infiles2[1],infiles2[2])
 	regions <- c('introns','exons','intergene')
-	rFiles <- paste(regionLoc,paste0('HG38.',regions,'.bed'),sep='/')
+	rFiles <- paste(regionLoc,paste0(regions,'.bed'),sep='/')
 	GR3 <- lapply(rFiles,deriveGRfrBed); names(GR3) <- regions
 	regionSum <- matrix(0,nr=2,nc=length(regions),dimnames=list(c(infiles2[1],infiles2[2]),regions )  )
 	for (input in c(infiles2[1],infiles2[2])) {
@@ -167,10 +172,15 @@ itvCmpr_a_subf <- function(ls2) {
 #args <- commandArgs(T)
 #args=c("H3K9me3.bed","H3K27ac.bed")
 ####################### Read in python-annotated files & derive GC% ###################
-intv.ls2 <- lapply(paste( c(args[1],args[2]),'genome_anno.tsv',sep='.' ),
+
+files<-c(options$control, options$sample)
+fileNames<-c(options$controlName, options$sampleName)
+regionLoc<-options$databaseFolder
+
+intv.ls2 <- lapply(files,
 	function(x) {
 		anno <- read.delim(x,check.names=F,as.is=T)
-		gc_mean <- anno[,'C%_mean']+anno[,'C%_mean']
+		gc_mean <- anno[,'G%_mean']+anno[,'C%_mean']
 		anno <- data.frame(anno,gc_mean=gc_mean)
 		anno
 	}
@@ -178,7 +188,7 @@ intv.ls2 <- lapply(paste( c(args[1],args[2]),'genome_anno.tsv',sep='.' ),
 intv1 <- intv.ls2[[1]]
 intv2 <- intv.ls2[[2]]
 ###################### End read-in & GC formulation ####################################
-newlist <- R_comp_table(intv1,intv2,c(args[1],args[2]))
+newlist <- R_comp_table(intv1,intv2,fileNames,regionLoc=regionLoc)
 ```
 ## Catalogue of input intervals by genomic region type
 More explanation
@@ -198,7 +208,7 @@ More explanation
 ############ Energy ###################
 subNames <- c('delta_G37','delta_H')
 col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], paste(subNames,'mean',sep='_') )
-R_comp_ftPlot(col.ls2,c(args[1],args[2]),subNames)
+R_comp_ftPlot(col.ls2,fileNames,subNames)
 ```
 
 ## Entropy
@@ -208,7 +218,7 @@ More explanation
 ############ Entropy ##################
 subNames <- c(paste0('Entropy',2:4))
 col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], paste(subNames,'mean',sep='_') )
-R_comp_ftPlot(col.ls2,c(args[1],args[2]),subNames)
+R_comp_ftPlot(col.ls2,fileNames,subNames)
 ```
 
 ## GC content
@@ -218,7 +228,7 @@ More explanation
 ########## GC #################
 subNames <- c('gc')
 col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], paste(subNames,'mean',sep='_') )
-R_comp_ftPlot(col.ls2,c(args[1],args[2]),subNames)
+R_comp_ftPlot(col.ls2,fileNames,subNames)
 ```
 
 ## Paralogy (redundant count)
@@ -228,5 +238,5 @@ More explanation
 ########## HS #################
 subNames <- c('HS')
 col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], paste(subNames,'mean',sep='_') )
-R_comp_ftPlot(col.ls2,c(args[1],args[2]),subNames)
+R_comp_ftPlot(col.ls2,fileNames,subNames)
 ```

@@ -212,9 +212,17 @@ def annotate(args, logger):
   
   if args.controlInput is not None:
     doAnnotate(annoParts, slimAnnoHeader, emptyAnno, args.controlInput, args.controlOutput, args, logger)
-    rPath = "cmpr2in.R"
-    runCommand(rPath + " -c \"" + args.controlOutput + "\" --controlName " + args.controlName + " -s \"" + args.output + "\" --sampleName " + args.inputName + " -o " + args.comparisonOutputPrefix, logger)
+    realpath = os.path.dirname(os.path.realpath(__file__))
+    rPath = realpath + "/data/R_comp.R"
+    rmdPath = realpath + "/data/R_comp.Rmd"
+    runCommand(rPath + " -c \"" + args.controlOutput + "\" --controlName " + args.controlName + " -s \"" + args.output + "\" --sampleName " + args.inputName + " -r \"" + rmdPath + "\" -d \"" + args.database + "\" -o \"" + args.comparisonOutput + "\"", logger)
         
+def check_file(filename, parser):
+  if not os. path. isfile(filename):
+    print "error: file not exists: " + filename
+    parser.print_help()
+    sys.exit(1)
+
 def main():
   parser = argparse.ArgumentParser(description="Annoate genome info.",
                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -227,11 +235,10 @@ def main():
   parser.add_argument('--inputName', action='store', nargs='?', help="Input name")
   parser.add_argument('-o', '--output', action='store', nargs='?', help="Output annotated file")
   parser.add_argument('-t', '--track', action='store_true', help="Generate IGV track files", default=False)
-  parser.add_argument('-g', '--genome', action='store', nargs='?', help="Genome size file for building IGV track")
-  parser.add_argument('--controlInput', action='store', nargs='?', help="Control input locus file (chr, start, end, splited by tab)")
+  parser.add_argument('-c', '--controlInput', action='store', nargs='?', help="Control input locus file (chr, start, end, splited by tab)")
   parser.add_argument('--controlName', action='store', nargs='?', help="Control name")
   parser.add_argument('--controlOutput', action='store', nargs='?', help="Control output annotated file")
-  parser.add_argument('--comparisonOutputPrefix', action='store', nargs='?', help="Comparison output prefix of control and input")
+  parser.add_argument('--comparisonOutput', action='store', nargs='?', help="Comparison output html file")
   parser.add_argument('--ignore_exist', action='store_true', help="Ignore the result which is exist", default=False)
   parser.add_argument('--debug', action='store_true', help="Output debug information", default=False)
   
@@ -246,30 +253,35 @@ def main():
     args.input="/scratch/cqs/shengq2/guoyan/20190131_genome_annotation/input.txt"
     args.output="/scratch/cqs/shengq2/guoyan/20190131_genome_annotation/input.anno.txt"
     args.track=True
-    args.genome="/home/shengq2/program/projects/guoyan/20190204_genome_annotation/hg38.sizes.genome"
     args.debug=True
 
   if args.output is None:
     args.output = args.input + ".genome_anno.tsv"
 
+  check_file(args.input, parser)
+
   if args.inputName is None:
     args.inputName = os.path.splitext(os.path.basename(args.input))[0]
 
   if args.controlInput is not None:
+    check_file(args.controlInput, parser)
+
     if args.controlOutput is None:
       args.controlOutput = args.controlInput + ".genome_anno.tsv"
       
     if args.controlName is None:
       args.controlName = os.path.splitext(os.path.basename(args.controlInput))[0]
       
-    if args.comparisonOutputPrefix is None:
-      args.comparisonOutputPrefix = args.inputName + "_vs_" + args.controlName
+    if args.comparisonOutput is None:
+      args.comparisonOutput = args.inputName + "_vs_" + args.controlName + ".html"
 
+    check_file(args.database + "/exons.bed", parser)
+    check_file(args.database + "/intergene.bed", parser)
+    check_file(args.database + "/introns.bed", parser)
+    
   if args.track:
-    if args.genome is None:
-      print "error: argument -g/--genome is required to generate IGV track files"
-      parser.print_help()
-      sys.exit(1)
+    args.genome = args.database + "/sizes.genome.txt"
+    check_file(args.genome, parser)
   
   logger = initialize_logger(args.output + ".log", args)
   annotate(args, logger)
