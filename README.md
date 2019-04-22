@@ -14,9 +14,12 @@ pip install git+git://github.com/shengqh/annotateGenome.git
 annotateGenome -d folder_with_database -i bed_file -t -g hg38.sizes.genome
 ```
 
-# required hg38.sizes.genome
+# required database (hg38)
+Download database files from: 
 
-The file contains chromosome and length seperated by tab.
+https://cqsweb.app.vumc.org/download1/annotateGenome/hg38/
+
+The sizes.genome.txt contains chromosome and length seperated by tab.
 
 ```
 1       248956422
