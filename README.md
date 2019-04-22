@@ -10,8 +10,14 @@ pip install git+git://github.com/shengqh/annotateGenome.git
 
 # usage
 
+Annotate one file
 ```
-annotateGenome -d folder_with_database -i bed_file -t -g hg38.sizes.genome
+annotateGenome -d folder_with_database -i bed_file -t
+```
+
+Annotate and compare two files
+```
+annotateGenome -d folder_with_database -i bed_file -c control_file
 ```
 
 # required database (hg38)
