@@ -15,9 +15,11 @@ setuptools.setup(
     entry_points = {
         'console_scripts': ['annotateGenome=annotateGenome.__main__:main'],
     },
-    packages=setuptools.find_packages(),
+    packages=['annotateGenome'],
+    package_dir={'annotateGenome': 'src/annotateGenome'},
+    package_data={'annotateGenome': ['data/*.*']},
     install_requires=['argparse', 'pytabix', 'numpy'],
-    data_files=[('bin', ['bin/bedGraphToBigWig', 'bin/cmpr2in.R'])],
+    data_files=[('bin', ['bin/bedGraphToBigWig'])],
     classifiers=[
         "Programming Language :: Python :: 2",
         "License :: OSI Approved :: MIT License",
