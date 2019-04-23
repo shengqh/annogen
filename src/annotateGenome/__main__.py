@@ -214,8 +214,7 @@ def annotate(args, logger):
     doAnnotate(annoParts, slimAnnoHeader, emptyAnno, args.controlInput, args.controlOutput, args, logger)
     realpath = os.path.dirname(os.path.realpath(__file__))
     rPath = realpath + "/data/R_comp.R"
-    rmdPath = realpath + "/data/R_comp.Rmd"
-    runCommand(rPath + " -c \"" + args.controlOutput + "\" --controlName " + args.controlName + " -s \"" + args.output + "\" --sampleName " + args.inputName + " -r \"" + rmdPath + "\" -d \"" + args.database + "\" -o \"" + args.comparisonOutput + "\"", logger)
+    runCommand("Rscript --vanilla " + rPath + " -c \"" + args.controlOutput + "\" --controlName " + args.controlName + " -s \"" + args.output + "\" --sampleName " + args.inputName + " -d \"" + args.database + "\" -o \"" + args.comparisonOutput + "\"", logger)
         
 def check_file(filename, parser):
   if not os. path. isfile(filename):
