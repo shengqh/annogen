@@ -17,7 +17,7 @@ The value of a particular genomic feature is pre-calcuated for each base site in
 The whole human genome is differentiated into three region types: Intron, Exon, and Intergene (intergenic region). Around 1/10000 sites proportionally distributed across chromosomes and three region types were randomly sampled, which gave rise to the background distributions of each feature in each region type. In the histograms below, the superimposed density curves correspond to background distributions of Exon (black), Intron (dark gray), and Intergenic region (light gray), respectively.     
 
 
-```{r compare, echo=T, comment=T, warning=FALSE, dependson=F, message=T}
+```{r compare, echo=F, comment=F, warning=FALSE, dependson=F, message=F}
 
 library(knitr)
 #R_comp.R
