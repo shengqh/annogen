@@ -17,7 +17,7 @@ The value of a particular genomic feature is pre-calcuated for each base site in
 The whole human genome is differentiated into three region types: Intron, Exon, and Intergene (intergenic region). Around 1/10000 sites proportionally distributed across chromosomes and three region types were randomly sampled, which gave rise to the background distributions of each feature in each region type. In the histograms below, the superimposed density curves correspond to background distributions of Exon (black), Intron (dark gray), and Intergenic region (light gray), respectively.     
 
 
-```{r compare, echo=F, comment=F, warning=FALSE, dependson=F, message=FALSE}
+```{r compare, echo=T, comment=T, warning=FALSE, dependson=F, message=T}
 
 library(knitr)
 #R_comp.R
@@ -137,9 +137,9 @@ R_comp_table <- function(itv1,itv2,infiles2,regionLoc,subNames=subNames0,mn=mnFe
 		}		
 	}
   #kable(regionSum)
-	write.table(regionSum,paste0(infiles2[1],'_',infiles2[2],'_regionSum.tsv'),col.names=NA,quote=F,sep='\t')
+	#write.table(regionSum,paste0(infiles2[1],'_',infiles2[2],'_regionSum.tsv'),col.names=NA,quote=F,sep='\t')
   #kable(cmprTbl)
-	write.table(cmprTbl,paste0(infiles2[1],'_',infiles2[2],'_cmpr.tsv'),col.names=NA,quote=F,sep='\t')
+	#write.table(cmprTbl,paste0(infiles2[1],'_',infiles2[2],'_cmpr.tsv'),col.names=NA,quote=F,sep='\t')
 	newlist=list("regionSum"=regionSum, "cmprTbl"=cmprTbl)
 	return(newlist)
 }
@@ -206,6 +206,9 @@ itvCmpr_hs <- function(ls2) {
 ####################### Read in python-annotated files & derive GC% ###################
 
 files<-c(options$control, options$sample)
+
+cat(files)
+
 fileNames<-c(options$controlName, options$sampleName)
 regionLoc<-options$databaseFolder
 
