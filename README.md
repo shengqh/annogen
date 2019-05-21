@@ -24,7 +24,7 @@ https://cqsweb.app.vumc.org/download1/annotateGenome/examples/
 
 # usage
 
-Annotate one file
+### Annotate one file
 ```
 annotateGenome -d folder_with_database -i bed_file -t
 ```
@@ -33,7 +33,7 @@ for example:
 annotateGenome -d folder_with_database -i H3K27me3.bed -t
 ```
 
-Annotate and compare two files
+### Annotate and compare two files
 ```
 annotateGenome -d folder_with_database -i bed_file -c control_file
 ```
