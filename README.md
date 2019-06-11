@@ -35,6 +35,11 @@ You may download example target region files from:
 
 https://cqsweb.app.vumc.org/download1/annotateGenome/examples/
 
+```
+wget https://cqsweb.app.vumc.org/download1/annotateGenome/examples/bed.list
+wget -B https://cqsweb.app.vumc.org/download1/annotateGenome/examples/ -i bed.list
+```
+
 # usage
 
 ### Annotate one file (annotation mode)
