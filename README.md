@@ -21,6 +21,13 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 BiocManager::install("GenomicRanges")
 ```
 
+For old R version, you may have to try:
+
+```
+source("https://bioconductor.org/biocLite.R")
+BiocInstaller::biocLite("GenomicRanges")
+```
+
 # required database (hg38)
 
 Download **ALL** database files to same folder from:
