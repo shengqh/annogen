@@ -13,7 +13,7 @@ pip install git+git://github.com/shengqh/annotateGenome.git
 Install packages in R before you perform in comparison mode:
 
 ```
-install.packages(c("optparse", "rmarkdown", "knitr", "MASS", "pscl"))
+install.packages(c("optparse", "rmarkdown", "knitr", "pscl", "gridExtra"))
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
