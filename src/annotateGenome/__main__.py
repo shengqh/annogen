@@ -218,7 +218,7 @@ def annotate(args, logger):
         
 def check_file(filename, parser):
   if not os. path. isfile(filename):
-    print "error: file not exists: " + filename
+    print("error: file not exists: " + filename)
     parser.print_help()
     sys.exit(1)
 
