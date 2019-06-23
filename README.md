@@ -75,7 +75,16 @@ annotateGenome -d folder_with_database -i H3K27me3.bed -c H3K27ac.bed
 
 # running annotateGenome using singularity
 
-We also build docker container for annotateGenome which can be used by singularity
+We also build docker container for annotateGenome which can be used by singularity.
+
+## running directly
+
 ```
 singularity exec docker://shengqh/bioinfo:annotateGenome annotateGenome -d folder_with_database -i bed_file -t
+```
+
+## convert docker image to singularity image first
+```
+singularity build annotateGenome.simg docker://shengqh/bioinfo:annotateGenome
+singularity exec annotateGenome.simg annotateGenome -d folder_with_database -i bed_file -t
 ```
