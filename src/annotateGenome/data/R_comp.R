@@ -26,24 +26,32 @@ scriptFile<-gsub("--file=","",scriptFile)
 scriptFile<-normalizePath(scriptFile)
 rmdFile<-gsub(".R$", ".Rmd", scriptFile)
 
+outputFile<-normalizePath(opts$output, mustWork = FALSE)
+output_dir = dirname(outputFile)
+
+outputFileRmd<-gsub(".[^.]*$", ".Rmd", outputFile)
+
+cat("Copy rmd file to ", outputFileRmd, "\n")
+
+file.copy(rmdFile, outputFileRmd, overwrite=T )
+
 options<-list(control = normalizePath(opts$control),
               controlName = opts$controlName,
               sample = normalizePath(opts$sample),
               sampleName = opts$sampleName,
-              rmdFile = rmdFile,
-              databaseFolder = normalizePath(opts$databaseFolder),
-              outputFile = normalizePath(opts$output))
+              databaseFolder = normalizePath(opts$databaseFolder))
 
-print(options)
+optionDf<-data.frame("Key"=c("control", "controlName", "sample", "sampleName", "databaseFolder"),
+                     "Value"=c(normalizePath(opts$control),opts$controlName, normalizePath(opts$sample), opts$sampleName, normalizePath(opts$databaseFolder)))
+
+optionFile<-paste0(output_dir, "/fileList1.txt")
+
+cat("Write options to ", optionFile, "\n")
+
+write.table(optionDf, file=optionFile, sep="\t", row.names=F)
 
 library(rmarkdown)
-reportRmd<-options$rmdFile
 
-output_dir = dirname(options$output)
-output_file = basename(options$output)
+cat("Output report to:", outputFile, "\n")
+rmarkdown::render(outputFileRmd, output_dir = output_dir)
 
-cat("Output report to:", options$output, "\n")
-rmarkdown::render(reportRmd,
-                  output_dir = output_dir,
-                  output_file = output_file,
-                  params = list(data = options))

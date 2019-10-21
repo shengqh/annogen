@@ -20,85 +20,36 @@ The whole human genome is differentiated into three region types: Intron, Exon, 
 ```{r compare, echo=F, comment=F, warning=FALSE, dependson=F, message=F}
 
 library(knitr)
-#R_comp.R
-### Assuming interval-level annotation files (*1.genome_anno.tsv & *2.genome_anno.tsv) are ready as result of parental PY script.
-### stem1,stem2 = TWO STRINGS AS STEM NAMES FOR THE USER INPUT FILE 1 & 2
-### call( ["Rscript","R_comp.R",stem1,stem2] )
+
+df=read.table("fileList1.txt", sep="\t", header=T,stringsAsFactors = F)
+options=split(df$Value, df$Key)
 
 mnFeatures<-c(-132.13,-798.53,2.63,3.62,4.18,46.17,1.81,-135.18,-803.57,2.61,3.62,4.19,48.77,1.21,-131.33,-797.97,2.64,3.63,4.18,45.29,3.44)
 sdFeatures<-c(14.31,19.11,0.21,0.20,0.18,13.21,30.86,14.70,20.63,0.16,0.17,0.14,13.35,11.15,13.79,19.52,0.22,0.22,0.20,12.52,57.16)
 mnFeatures <- matrix(mnFeatures,nc=3,dimnames=list(c('delta_G37','delta_H','Entropy2','Entropy3','Entropy4','gc','HS'),c('introns','exons','intergene')))
 sdFeatures <- matrix(sdFeatures,nc=3,dimnames=dimnames(mnFeatures))
-subNames0 <- list(
-	energy=c('delta_G37','delta_H'),
-	entropy=c(paste0('Entropy',2:4)),
-	gc=c('gc'),
-	map=c('HS')
-)
 
-#R_comp_ftPlot(): plotting foreground/background distributions for one feature.
-#
-#INPUT infiles2: the two input bed files. e.g., c('H3K27ac.bed','H3K9me3.bed')
-#INPUT subNames: the subfeatures of one feature. e.g., c('Entropy2','Entropy3','Entropy4') are good for Entropy.
-R_comp_ftPlot <- function(ls2,infiles2,subNames=subNames0,mn=mnFeatures,sd=sdFeatures) { #itv1,itv2,   # col.ls2,c(stem1,stem2),c('Entropy2','Entropy3','Entropy4')
-  library(ggplot2)
-  library(gridExtra)
-  nSub <- length(subNames) #ncol(ls2[[1]])
-  pS <- vector('list',nSub)
-  mnSubfs <- mn[subNames,,drop=F]
-  sdSubfs <- sd[subNames,,drop=F]
-	for (i in 1:nSub) {
-	  ############ Prepare xs & ys for background distributions #########
-		if (subNames[1]!='HS') {
-			cols <- c('gray50','black','gray80') #introns,exons,intergene
-			names(cols) <- colnames(mn)
-			mnSubf <- mnSubfs[i,,drop=F]
-			sdSubf <- sdSubfs[i,,drop=F]
-			datNorm <- vector('list',ncol(mn)); names(datNorm)=colnames(mn)
-			for (region in colnames(mn)) {
-				mn.r <- mnSubf[1,region]
-				sd.r <- sdSubf[1,region]
-				xs <- seq(from=mn.r-3*sd.r,to=mn.r+3*sd.r,length.out=1000)
-				ys <- dnorm(xs,mean=mn.r,sd=sd.r)
-				datNorm[[region]] <- data.frame(x=xs,y=ys)
-			}
-		}
-	################## End preparation #################
-    subi.ls2 <- lapply(ls2,function(x) x[,i])
-    in1 <- data.frame(score=subi.ls2[[1]],Input=infiles2[1])
-    in2 <- data.frame(score=subi.ls2[[2]],Input=infiles2[2])
-    dataFeature <- rbind(in1,in2)
-		if (subNames[1]!='HS') {
-			if (i!=nSub) {
-				pS[[i]] <- qplot(geom='blank')+geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' )+geom_line(data=datNorm[['introns']],aes(x,y),color=cols['introns']) + geom_line(data=datNorm[['exons']],aes(x,y),color=cols['exons']) + geom_line(data=datNorm[['intergene']],aes(x,y),color=cols['intergene'])+labs(x=subNames[i],y='density') +theme(legend.position='none') #aes(y = ..density.. )
-			} else {
-				pS[[i]] <- qplot(geom='blank')+ geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' ) +geom_line(data=datNorm[['introns']],aes(x,y),color=cols['introns']) + geom_line(data=datNorm[['exons']],aes(x,y),color=cols['exons']) + geom_line(data=datNorm[['intergene']],aes(x,y),color=cols['intergene']) +labs(x=gsub('gc','GC%',subNames[i]),y='density') +theme(legend.position='top')
-			}
-		} else {
-        pS[[i]] <- qplot(geom='blank') + geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' ) + labs(x='Homology score',y='density') +theme(legend.position='top') #labs(x=subNames[i]
 
-		}
-  }
-  do.call('grid.arrange',c(pS,nrow=1))
-}
-
-#R_comp_table(): Summarize users' interval-level features in graphics and statistically compare the various features between two inputs.
-### INPUT itv1 & itv2: bed-like matrices for interval set 1 and set 2.
-### INPUT infiles2: the two input bed files. e.g., c('H3K27ac.bed','H3K9me3.bed')
-### INPUT regionLoc: directory where bed files for three types of genomic regions are stored.
+#cmpr2in(): Summarize users' interval-level features in graphics and statistically compare the various features between two inputs.
+### INPUT stem1 & stem2: stems of annotated file names (most likely the ultimate input file names to the software).
+### regionLoc: directory where bed files for three types of genomic regions are stored.
 ### INPUT mn & sd: mean & sd statistics of 4*3 background distributions (feature4 by region3)
 ### NOTE currently I adopt the mean feature score (instead of median, 25%, etc.)
-R_comp_table <- function(itv1,itv2,infiles2,regionLoc,subNames=subNames0,mn=mnFeatures,sd=sdFeatures) {
-	####################### Read in python-annotated files & derive GC% ###################
+cmpr2in <- function(intv.ls2, stemNames, regionLoc,mn=mnFeatures,sd=sdFeatures) {
+  filePrefix<-paste(stemNames[2:1], collapse = "_VS_")
+  
+	intv1 <- intv.ls2[[1]]
+	intv2 <- intv.ls2[[2]]
 	################## Discern genomic regions of input intervals #################
 	library(GenomicRanges)
-	intv.ls2 <- list(itv1,itv2)
-	gr2 <- lapply(intv.ls2,deriveGRfrItv); names(gr2) <- c(infiles2[1],infiles2[2])
+	gr2 <- lapply(intv.ls2,deriveGRfrItv); 
+	names(gr2) <- stemNames
 	regions <- c('introns','exons','intergene')
 	rFiles <- paste(regionLoc,paste0(regions,'.bed'),sep='/')
-	GR3 <- lapply(rFiles,deriveGRfrBed); names(GR3) <- regions
-	regionSum <- matrix(0,nr=2,nc=length(regions),dimnames=list(c(infiles2[1],infiles2[2]),regions )  )
-	for (input in c(infiles2[1],infiles2[2])) {
+	GR3 <- lapply(rFiles,deriveGRfrBed); 
+	names(GR3) <- regions
+	regionSum <- matrix(0,nr=2,nc=length(regions),dimnames=list(stemNames,regions )  )
+	for (input in stemNames) {
 		gr <- gr2[[input]]
 		for (region in regions) {
 			GR <- GR3[[region]]
@@ -109,6 +60,12 @@ R_comp_table <- function(itv1,itv2,infiles2,regionLoc,subNames=subNames0,mn=mnFe
 	regionSum <- cbind(regionSum,totalNum=c(nrow(intv1),nrow(intv2)))
 	colnames(regionSum)[1:length(regions)] <- paste0(colnames(regionSum)[1:length(regions)],'(%)')
 	################## End discerning #############################################
+  subNames <- list(
+    energy=c('delta_G37','delta_H'),
+    entropy=c(paste0('Entropy',2:4)),
+    gc=c('gc'),
+    map=c('HS')
+  )
 	feature4 <- names(subNames)
 	subN <- sapply(subNames,length); names(subN) <- feature4
 	######################### Plot foreground/background distributions #####################
@@ -122,28 +79,21 @@ R_comp_table <- function(itv1,itv2,infiles2,regionLoc,subNames=subNames0,mn=mnFe
 	)
 	colnames(cmprTbl) <- gsub('\\.$','',colnames(cmprTbl),perl=T)
 	for (feature in feature4) {
-		#vars <- c(paste(subNames[[feature]],'mean',sep='_'),paste(subNames[[feature]],'median',sep='_'))
-		#col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], vars )
+		vars <- subNames[[feature]]#paste0('Entropy',c(2,3,4))
+		col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], paste(vars,'mean',sep='_') )
+		pdf(paste0(filePrefix, ".", feature,'.pdf'))
+		plot_a_feature(col.ls2,stemNames,vars,mn,sd)
+		dev.off()
 		# Statistical comparison of basewise scores through Wilcoxon & KS test
 		for (subf in subNames[[feature]]) {
-			#subf.ls2 <- lapply(col.ls2,function(x,subf) x[,paste0(subf,'_mean')],subf)
-			if (subf!='HS') {
-      	subf.ls2 <- lapply(intv.ls2,function(x,subf) x[,paste0(subf,'_mean')],subf)
-				cmprTbl[subf,] <- itvCmpr_a_subf(subf.ls2)
-			} else {
-				subf.ls2 <- lapply(intv.ls2,function(x,subf) floor(x[,paste0(subf,'_median')]),subf)
-				cmprTbl[subf,] <- itvCmpr_hs(subf.ls2)
-			}
+			subf.ls2 <- lapply(col.ls2,function(x,subf) x[,paste0(subf,'_mean')],subf)
+			cmprTbl[subf,] <- itvCmpr_a_subf(subf.ls2)
 		}		
 	}
-  #kable(regionSum)
-	#write.table(regionSum,paste0(infiles2[1],'_',infiles2[2],'_regionSum.tsv'),col.names=NA,quote=F,sep='\t')
-  #kable(cmprTbl)
-	#write.table(cmprTbl,paste0(infiles2[1],'_',infiles2[2],'_cmpr.tsv'),col.names=NA,quote=F,sep='\t')
-	newlist=list("regionSum"=regionSum, "cmprTbl"=cmprTbl)
-	return(newlist)
+	write.table(regionSum,paste0(filePrefix,'.regionSum.tsv'),col.names=NA,quote=F,sep='\t')
+	write.table(cmprTbl,paste0(filePrefix,'.cmpr.tsv'),col.names=NA,quote=F,sep='\t')
+	return(list(regionSum=regionSum, cmprTbl=cmprTbl))
 }
-
 deriveGRfrItv <- function(itvMore) {
 	require(GenomicRanges)
 	itv <- itvMore[,1:3]
@@ -173,46 +123,116 @@ itvCmpr_a_subf <- function(ls2) {
 	stats <- c(median(dat1),median(dat2),stats)
 	stats
 }
-#itvCmpr_hs(): analogy function to itvCmpr_a_subf(), designed for HS specially.
-itvCmpr_hs <- function(ls2) {
-#require(boot)
-	require(MASS)
-	require(pscl)
-	#ls2 <- LS2
-	ls2 <- lapply(ls2,function(x) x[x>=1]) # Drop intervals having noncanonical HS scores (such as N-stretches)
-	nItv <- sapply(ls2,length)
-	dat <- data.frame(hs_1=unlist(ls2)-1,Input=factor(c(rep(0,nItv[1]),rep(1,nItv[2]))) )
-	mNB <- glm.nb(hs_1~Input,data=dat)
-	mZIP <- zeroinfl(hs_1~Input|Input,data=dat)	
-	exStats <- function(m) { # extract statistics
-		statRows <- summary(m)$coef
-		if (mode(statRows)=='list') {
-			statRows <- statRows$count
+plot_a_feature <- function(ls2,stemName2,subNames,mn=mnFeatures,sd=sdFeatures) { #col.ls2,c(stem1,stem2),c('Entropy2','Entropy3','Entropy4')
+  library(ggplot2)
+  library(gridExtra)
+  nSub <- ncol(ls2[[1]])
+  pS <- vector('list',nSub)
+  mnSubfs <- mn[subNames,,drop=F]
+  sdSubfs <- sd[subNames,,drop=F]
+	for (i in 1:nSub) {
+	  ############ Prepare xs & ys for background distributions #########
+		if (subNames[1]!='HS') {
+			cols <- c('gray50','black','gray80') #introns,exons,intergene
+			names(cols) <- colnames(mn)
+			mnSubf <- mnSubfs[i,,drop=F]
+			sdSubf <- sdSubfs[i,,drop=F]
+			datNorm <- vector('list',ncol(mn)); names(datNorm)=colnames(mn)
+			for (region in colnames(mn)) {
+				mn.r <- mnSubf[1,region]
+				sd.r <- sdSubf[1,region]
+				xs <- seq(from=mn.r-3*sd.r,to=mn.r+3*sd.r,length.out=1000)
+				ys <- dnorm(xs,mean=mn.r,sd=sd.r)
+				datNorm[[region]] <- data.frame(x=xs,y=ys)
+				#p0 <- ggplot(datNorm,aes(x,y))+geom_line(color=cols[region])      
+			}
+			#pS[[i]] <- pS[[i]]+p0
 		}
-		stat <- statRows['Input1','z value']
-		p <- statRows['Input1','Pr(>|z|)']
-		c(stat,p)
-	}
-	resNB <- exStats(mNB)
-	resZIP <- exStats(mZIP)
-	stats <- c(median(ls2[[1]]),median(ls2[[2]]),c(resZIP,rep(NA,4)),c(resNB,rep(NA,4)))
-	stats
+	################## End preparation #################
+    subi.ls2 <- lapply(ls2,function(x) x[,i])
+    in1 <- data.frame(score=subi.ls2[[1]],Input=stemName2[1])
+    in2 <- data.frame(score=subi.ls2[[2]],Input=stemName2[2])
+    dataFeature <- rbind(in1,in2)
+    #p <- ggplot(data,aes(score,fill=Input)) + geom_histogram( aes(y = ..density.. ),alpha=1,position='dodge' ) # aes(y = ..density.. )
+    #p <- p + labs(x=subNames[i])
+    #if (i!=nSub) {
+    #	P <- p+theme(legend.position='none')
+    #} else {
+    #  P <- p+theme(legend.position='top')
+    #}
+		if (subNames[1]!='HS') {
+			if (i!=nSub) {
+				pS[[i]] <- qplot(geom='blank')+geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' )+geom_line(data=datNorm[['introns']],aes(x,y),color=cols['introns']) + geom_line(data=datNorm[['exons']],aes(x,y),color=cols['exons']) + geom_line(data=datNorm[['intergene']],aes(x,y),color=cols['intergene'])+labs(x=subNames[i],y='density') +theme(legend.position='none') #aes(y = ..density.. )
+			} else {
+				pS[[i]] <- qplot(geom='blank')+ geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' ) +geom_line(data=datNorm[['introns']],aes(x,y),color=cols['introns']) + geom_line(data=datNorm[['exons']],aes(x,y),color=cols['exons']) + geom_line(data=datNorm[['intergene']],aes(x,y),color=cols['intergene']) +labs(x=subNames[i],y='density') +theme(legend.position='top')
+			}
+		} else {
+			#if (i!=nSub) {
+      #  pS[[i]] <- qplot(geom='blank') +  geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' ) + labs(x=subNames[i]) +theme(legend.position='none') #aes(y = ..density.. )
+      #} else {
+        pS[[i]] <- qplot(geom='blank') + geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' ) + labs(x=subNames[i],y='density') +theme(legend.position='top')
+
+		}
+  }
+  do.call('grid.arrange',c(pS,nrow=1))
 }
 
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
 
+#R_comp_ftPlot(): plotting foreground/background distributions for one feature.
+#
+#INPUT infiles2: the two input bed files. e.g., c('H3K27ac.bed','H3K9me3.bed')
+#INPUT subNames: the subfeatures of one feature. e.g., c('Entropy2','Entropy3','Entropy4') are good for Entropy.
+R_comp_ftPlot <- function(ls2,infiles2,subNames=subNames0,mn=mnFeatures,sd=sdFeatures) { #itv1,itv2,   # col.ls2,c(stem1,stem2),c('Entropy2','Entropy3','Entropy4')
+  library(ggplot2)
+  library(gridExtra)
+  nSub <- length(subNames) #ncol(ls2[[1]])
+  pS <- vector('list',nSub)
+  mnSubfs <- mn[subNames,,drop=F]
+  sdSubfs <- sd[subNames,,drop=F]
+  
+  for (i in 1:nSub) {
+    ############ Prepare xs & ys for background distributions #########
+    if (subNames[1]!='HS') {
+      cols <- c('gray50','black','gray80') #introns,exons,intergene
+      names(cols) <- colnames(mn)
+      mnSubf <- mnSubfs[i,,drop=F]
+      sdSubf <- sdSubfs[i,,drop=F]
+      datNorm <- vector('list',ncol(mn)); names(datNorm)=colnames(mn)
+      for (region in colnames(mn)) {
+        mn.r <- mnSubf[1,region]
+        sd.r <- sdSubf[1,region]
+        xs <- seq(from=mn.r-3*sd.r,to=mn.r+3*sd.r,length.out=1000)
+        ys <- dnorm(xs,mean=mn.r,sd=sd.r)
+        datNorm[[region]] <- data.frame(x=xs,y=ys)
+      }
+    }
+    ################## End preparation #################
+    subi.ls2 <- lapply(ls2,function(x) x[,i])
+    in1 <- data.frame(score=subi.ls2[[1]],Input=infiles2[1])
+    in2 <- data.frame(score=subi.ls2[[2]],Input=infiles2[2])
+    dataFeature <- rbind(in1,in2)
+    if (subNames[1]!='HS') {
+      if (i!=nSub) {
+        pS[[i]] <- qplot(geom='blank')+geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' )+geom_line(data=datNorm[['introns']],aes(x,y),color=cols['introns']) + geom_line(data=datNorm[['exons']],aes(x,y),color=cols['exons']) + geom_line(data=datNorm[['intergene']],aes(x,y),color=cols['intergene'])+labs(x=subNames[i],y='density') +theme(legend.position='none') #aes(y = ..density.. )
+      } else {
+        pS[[i]] <- qplot(geom='blank')+ geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' ) +geom_line(data=datNorm[['introns']],aes(x,y),color=cols['introns']) + geom_line(data=datNorm[['exons']],aes(x,y),color=cols['exons']) + geom_line(data=datNorm[['intergene']],aes(x,y),color=cols['intergene']) +labs(x=gsub('gc','GC%',subNames[i]),y='density') +theme(legend.position='top')
+      }
+    } else {
+      pS[[i]] <- qplot(geom='blank') + geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' ) + labs(x='Homology score',y='density') +theme(legend.position='top') #labs(x=subNames[i]
+    }
+  }
+  
+  do.call("grid.arrange", c(pS, nrow=1))
+}
 
-#args <- commandArgs(T)
-#args=c("H3K9me3.bed","H3K27ac.bed")
 ####################### Read in python-annotated files & derive GC% ###################
-
-files<-c(options$control, options$sample)
-
-cat(files)
-
-fileNames<-c(options$controlName, options$sampleName)
-regionLoc<-options$databaseFolder
-
-intv.ls2 <- lapply(files,
+intv.ls2 <- lapply(c(options$control, options$sample),
 	function(x) {
 		anno <- read.delim(x,check.names=F,as.is=T)
 		gc_mean <- anno[,'G%_mean']+anno[,'C%_mean']
@@ -220,16 +240,17 @@ intv.ls2 <- lapply(files,
 		anno
 	}
 )
-intv1 <- intv.ls2[[1]]
-intv2 <- intv.ls2[[2]]
-###################### End read-in & GC formulation ####################################
-newlist <- R_comp_table(intv1,intv2,fileNames,regionLoc=regionLoc)
+
+fileNames<-c(options$controlName, options$sampleName)
+
+cmpres <- cmpr2in(intv.ls2, fileNames, options$databaseFolder, mnFeatures, sdFeatures)
+
 ```
 
 ## Catalogue of input intervals by genomic region type
 The genomic region type of each input interval are identified as Intron, Exon, or Intergene (intergenic region), on account of the nature of the embedding DNA fragment. An interval can be tagged with multiple region type labels, because different region type instances may overlay and also partial overlap is counted in type identification. 
 ```{r compare table 1, echo=F, comment=F, warning=FALSE, dependson=F, message=FALSE}
-kable(newlist[1])
+kable(cmpres$regionSum)
 ```
 
 ## Statistical comparison of genomic features
@@ -250,7 +271,7 @@ D.p, D+.p, D-.p: p-values out of Kolmogorov-Smirnov test.
   
 ```{r compare table 2, echo=F, comment=F, warning=FALSE, dependson=F, message=FALSE}
 
-testRes <- round(newlist[[2]],3)
+testRes <- round(cmpres$cmprTbl,3)
 rownames(testRes) <- gsub('gc','GC',rownames(testRes))
 colnames(testRes)[c(3,4,9,10)] <- paste0(colnames(testRes)[c(3,4,9,10)],'*')
 kable(testRes)
@@ -295,3 +316,4 @@ subNames <- c('HS')
 col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], paste(subNames,'mean',sep='_') )
 R_comp_ftPlot(col.ls2,fileNames,subNames)
 ```
+
