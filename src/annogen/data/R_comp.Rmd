@@ -120,7 +120,7 @@ itvCmpr_a_subf <- function(ls2) {
 	Wm.res <- wilcox.test(dat1,dat2,alternative='less')
 	stats <- c(W.res$statistic,W.res$p.value,Wp.res$statistic,Wp.res$p.value,Wm.res$statistic,Wm.res$p.value,
 		D.res$statistic,D.res$p.value,Dp.res$statistic,Dp.res$p.value,Dm.res$statistic,Dm.res$p.value)
-	stats <- c(median(dat1),median(dat2),stats)
+	stats <- c(median(dat1,na.rm=T),median(dat2,na.rm=T),stats)
 	stats
 }
 plot_a_feature <- function(ls2,stemName2,subNames,mn=mnFeatures,sd=sdFeatures) { #col.ls2,c(stem1,stem2),c('Entropy2','Entropy3','Entropy4')
