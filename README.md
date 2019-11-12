@@ -1,13 +1,23 @@
-# annotateGenome
+# AnnoGen
 
-This package is used to annotate bed file with pre-calculated genome information.
+## Motivation
+
+In spite of six years post its official release, the latest human reference genome GRCh38 is still outweighed by its predecessor in some research settings due to inferiority in annotation richness and convenience. It is imperative to augment quantity and diversity of genome-wide annotation data for the latest reference genome to promote its adoption by ongoing and future impactful studies.
+
+## Results
+
+Here Wwe developed a python toolkit AnnoGen, which firstat the first time, allows the annotation of threewith enormous pragmatic basewise quantities of four pragmatic genomic features for the GRCh38 genome. The three features are, Chemical Bonding including Energy, Entropy, GC content, and Homology Score. The Homology Score is an exceptional feature solved through exhaustive alignment between run-ning DNA windows against the whole genome.that captures the genome wide homology through 100 baseapair ovlapping windows.
+
+## Conclusion
+
+AnnoGen is capabable of annotating the proprietary pragmatic features for variable user-interested genomic regions and option-ally comparing two parallel sets of genomic regions. AnnoGen is characterized with simple utility modes and succinct HTML report of informa-tive statistical tables and plots. 
 
 # installation
 
 Install python main package:
 
 ```
-pip install git+git://github.com/shengqh/annotateGenome.git
+pip install git+git://github.com/shengqh/annogen.git
 ```
 
 Install packages in R before you perform in comparison mode:
