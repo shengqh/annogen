@@ -4,20 +4,20 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="annotateGenome",
+    name="annogen",
     version="0.0.9",
     author="Quanhu Sheng",
     author_email="quanhu.sheng.1@vumc.org",
     description="Annotate bed file with genome information",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/shengqh/annotateGenome",
+    url="https://github.com/shengqh/annogen",
     entry_points = {
-        'console_scripts': ['annotateGenome=annotateGenome.__main__:main'],
+        'console_scripts': ['annogen=annogen.__main__:main'],
     },
-    packages=['annotateGenome'],
-    package_dir={'annotateGenome': 'src/annotateGenome'},
-    package_data={'annotateGenome': ['data/*.*']},
+    packages=['annogen'],
+    package_dir={'annogen': 'src/annogen'},
+    package_data={'annogen': ['data/*.*']},
     install_requires=['argparse', 'pytabix', 'numpy'],
     data_files=[('bin', ['bin/bedGraphToBigWig'])],
     classifiers=[

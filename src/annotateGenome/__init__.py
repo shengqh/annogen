@@ -1,1 +1,0 @@
-name = "annotate_genome"

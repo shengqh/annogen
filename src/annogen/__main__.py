@@ -9,7 +9,7 @@ import numpy as np
 import subprocess
 
 def initialize_logger(logfile, args):
-  logger = logging.getLogger('genomeAnno')
+  logger = logging.getLogger('annogen')
   loglevel = logging.DEBUG if args.debug else logging.INFO
   logger.setLevel(loglevel)
 
@@ -223,7 +223,7 @@ def check_file(filename, parser):
     sys.exit(1)
 
 def main():
-  parser = argparse.ArgumentParser(description="Annoate genome info.",
+  parser = argparse.ArgumentParser(description="Annotate genome info.",
                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   
   DEBUG = False
@@ -255,7 +255,7 @@ def main():
     args.debug=True
 
   if args.output is None:
-    args.output = args.input + ".genome_anno.tsv"
+    args.output = args.input + ".annogen.tsv"
 
   check_file(args.input, parser)
 
@@ -266,7 +266,7 @@ def main():
     check_file(args.controlInput, parser)
 
     if args.controlOutput is None:
-      args.controlOutput = args.controlInput + ".genome_anno.tsv"
+      args.controlOutput = args.controlInput + ".annogen.tsv"
       
     if args.controlName is None:
       args.controlName = os.path.splitext(os.path.basename(args.controlInput))[0]
