@@ -272,7 +272,7 @@ def main():
       args.controlName = os.path.splitext(os.path.basename(args.controlInput))[0]
       
     if args.comparisonOutput is None:
-      args.comparisonOutput = args.inputName + "_vs_" + args.controlName + ".html"
+      args.comparisonOutput = args.inputName + "_VS_" + args.controlName + ".html"
 
     check_file(args.database + "/exons.bed", parser)
     check_file(args.database + "/intergene.bed", parser)
