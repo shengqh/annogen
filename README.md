@@ -92,12 +92,12 @@ We also build docker container for annogen which can be used by singularity.
 ## running directly
 
 ```
-singularity exec docker://shengqh/annogen annogen -d folder_with_database -i bed_file -t
+singularity exec -e docker://shengqh/annogen annogen -d folder_with_database -i bed_file -t
 ```
 
 ## convert docker image to singularity image first
 
 ```
 singularity build annogen.simg docker://shengqh/annogen
-singularity exec annogen.simg annogen -d folder_with_database -i bed_file -t
+singularity exec -e annogen.simg annogen -d folder_with_database -i bed_file -t
 ```
