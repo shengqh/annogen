@@ -2,15 +2,15 @@
 
 ## Motivation
 
-In spite of six years post its official release, the latest human reference genome GRCh38 is still outweighed by its predecessor in some research settings due to inferiority in annotation richness and convenience. It is imperative to augment quantity and diversity of genome-wide annotation data for the latest reference genome to promote its adoption by ongoing and future impactful studies.
+Genome annotation is an important step for all in-depth bioinformatics analysis. It is imperative to augment quantity and diversity of genome-wide annotation data for the latest reference genome to promote its adoption by ongoing and future impactful studies.
 
 ## Results
 
-Here Wwe developed a python toolkit AnnoGen, which firstat the first time, allows the annotation of threewith enormous pragmatic basewise quantities of four pragmatic genomic features for the GRCh38 genome. The three features are, Chemical Bonding including Energy, Entropy, GC content, and Homology Score. The Homology Score is an exceptional feature solved through exhaustive alignment between run-ning DNA windows against the whole genome.that captures the genome wide homology through 100 baseapair ovlapping windows.
+We developed a python toolkit AnnoGen, which at the first time, allows the annotation of three pragmatic genomic features for the GRCh38 genome in enormous base-wise quantities. The three features are chemical binding Energy, sequence information Entropy, and Homology Score. The Homology Score is an exceptional feature that captures the genome-wide homology through single-base-offset tiling windows of 100 continual nucleotide bases.
 
 ## Conclusion
 
-AnnoGen is capabable of annotating the proprietary pragmatic features for variable user-interested genomic regions and option-ally comparing two parallel sets of genomic regions. AnnoGen is characterized with simple utility modes and succinct HTML report of informa-tive statistical tables and plots. 
+AnnoGen is capable of annotating the proprietary pragmatic features for variable user-interested genomic regions and optionally comparing two parallel sets of genomic regions. AnnoGen is characterized with simple utility modes and succinct HTML report of informative statistical tables and plots. 
 
 # installation
 
