@@ -65,36 +65,39 @@ wget -B https://cqsweb.app.vumc.org/download1/annotateGenome/examples/ -i bed.li
 # usage
 
 ### Annotate one file (annotation mode)
+
 ```
-annotateGenome -d folder_with_database -i bed_file -t
+annogen -d folder_with_database -i bed_file -t
 ```
 for example:
 ```
-annotateGenome -d folder_with_database -i H3K27me3.bed -t
+annogen -d folder_with_database -i H3K27me3.bed -t
 ```
 
 ### Annotate and compare two files (comparison mode)
+
 ```
-annotateGenome -d folder_with_database -i bed_file -c control_file
+annogen -d folder_with_database -i bed_file -c control_file
 ```
 
 for example:
 ```
-annotateGenome -d folder_with_database -i H3K27me3.bed -c H3K27ac.bed
+annogen -d folder_with_database -i H3K27me3.bed -c H3K27ac.bed
 ```
 
-# running annotateGenome using singularity
+# running annogen using singularity
 
-We also build docker container for annotateGenome which can be used by singularity.
+We also build docker container for annogen which can be used by singularity.
 
 ## running directly
 
 ```
-singularity exec docker://shengqh/annotate_genome annotateGenome -d folder_with_database -i bed_file -t
+singularity exec docker://shengqh/annogen annogen -d folder_with_database -i bed_file -t
 ```
 
 ## convert docker image to singularity image first
+
 ```
-singularity build annotateGenome.simg docker://shengqh/annotate_genome
-singularity exec annotateGenome.simg annotateGenome -d folder_with_database -i bed_file -t
+singularity build annogen.simg docker://shengqh/annogen
+singularity exec annogen.simg annogen -d folder_with_database -i bed_file -t
 ```
