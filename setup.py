@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="annogen",
-    version="0.0.9",
+    version="0.1.0",
     author="Quanhu Sheng",
     author_email="quanhu.sheng.1@vumc.org",
     description="Annotate bed file with genome information",
@@ -21,7 +21,7 @@ setuptools.setup(
     install_requires=['argparse', 'pytabix', 'numpy'],
     data_files=[('bin', ['bin/bedGraphToBigWig'])],
     classifiers=[
-        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
