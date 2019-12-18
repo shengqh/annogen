@@ -85,6 +85,8 @@ for example:
 annogen -d folder_with_database -i H3K27me3.bed -c H3K27ac.bed
 ```
 
+After comparison, annogen will generate html report about the features in two conditions. For example, [H3K27me3_VS_H3K27ac report](https://htmlpreview.github.io/?https://github.com/shengqh/annogen/blob/master/result/H3K27me3_VS_H3K27ac.html) includes two parts: 1) Catalogue of input intervals by genomic region type; and 2) Statistical comparison of genomic features. Energy, entropy, GC content and homology score figures are displayed side by side for comparison.
+
 # running annogen using singularity
 
 We also build docker container for annogen which can be used by singularity.
