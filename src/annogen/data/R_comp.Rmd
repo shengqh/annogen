@@ -184,11 +184,11 @@ g_legend<-function(a.gplot){
   return(legend)
 }
 
-#R_comp_ftPlot(): plotting foreground/background distributions for one feature.
+#R_comp_ftPlot2(): plotting foreground/background distributions for one feature.
 #
 #INPUT infiles2: the two input bed files. e.g., c('H3K27ac.bed','H3K9me3.bed')
 #INPUT subNames: the subfeatures of one feature. e.g., c('Entropy2','Entropy3','Entropy4') are good for Entropy.
-R_comp_ftPlot <- function(ls2,infiles2,subNames=subNames0,mn=mnFeatures,sd=sdFeatures) { #itv1,itv2,   # col.ls2,c(stem1,stem2),c('Entropy2','Entropy3','Entropy4')
+R_comp_ftPlot2 <- function(ls2,infiles2,subNames=subNames0,mn=mnFeatures,sd=sdFeatures) { #itv1,itv2,   # col.ls2,c(stem1,stem2),c('Entropy2','Entropy3','Entropy4')
   library(ggplot2)
   library(gridExtra)
   nSub <- length(subNames) #ncol(ls2[[1]])
@@ -196,39 +196,55 @@ R_comp_ftPlot <- function(ls2,infiles2,subNames=subNames0,mn=mnFeatures,sd=sdFea
   mnSubfs <- mn[subNames,,drop=F]
   sdSubfs <- sd[subNames,,drop=F]
   
+	isNotHS<-subNames[1]!='HS'
+
+	allDatFeature<-NULL
+	allDatNorm<-NULL
+
+  cols <- c('gray50','black','gray80') #introns,exons,intergene
+  names(cols) <- colnames(mn)
+
   for (i in 1:nSub) {
     ############ Prepare xs & ys for background distributions #########
-    if (subNames[1]!='HS') {
-      cols <- c('gray50','black','gray80') #introns,exons,intergene
-      names(cols) <- colnames(mn)
+    if (isNotHS) {
       mnSubf <- mnSubfs[i,,drop=F]
       sdSubf <- sdSubfs[i,,drop=F]
-      datNorm <- vector('list',ncol(mn)); names(datNorm)=colnames(mn)
       for (region in colnames(mn)) {
         mn.r <- mnSubf[1,region]
         sd.r <- sdSubf[1,region]
         xs <- seq(from=mn.r-3*sd.r,to=mn.r+3*sd.r,length.out=1000)
         ys <- dnorm(xs,mean=mn.r,sd=sd.r)
-        datNorm[[region]] <- data.frame(x=xs,y=ys)
+        datNorm <- data.frame(x=xs,y=ys,Category=subNames[i], Region=region)
+
+				if(is.null(allDatNorm)){
+					allDatNorm<-datNorm
+				}else{
+					allDatNorm<-rbind(allDatNorm, datNorm)
+				}
       }
     }
+
     ################## End preparation #################
     subi.ls2 <- lapply(ls2,function(x) x[,i])
     in1 <- data.frame(score=subi.ls2[[1]],Input=infiles2[1])
     in2 <- data.frame(score=subi.ls2[[2]],Input=infiles2[2])
-    dataFeature <- rbind(in1,in2)
-    if (subNames[1]!='HS') {
-      if (i!=nSub) {
-        pS[[i]] <- qplot(geom='blank')+geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' )+geom_line(data=datNorm[['introns']],aes(x,y),color=cols['introns']) + geom_line(data=datNorm[['exons']],aes(x,y),color=cols['exons']) + geom_line(data=datNorm[['intergene']],aes(x,y),color=cols['intergene'])+labs(x=subNames[i],y='density') +theme(legend.position='none') #aes(y = ..density.. )
-      } else {
-        pS[[i]] <- qplot(geom='blank')+ geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' ) +geom_line(data=datNorm[['introns']],aes(x,y),color=cols['introns']) + geom_line(data=datNorm[['exons']],aes(x,y),color=cols['exons']) + geom_line(data=datNorm[['intergene']],aes(x,y),color=cols['intergene']) +labs(x=gsub('gc','GC%',subNames[i]),y='density') +theme(legend.position='top')
-      }
-    } else {
-      pS[[i]] <- qplot(geom='blank') + geom_histogram(data=dataFeature,aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' ) + labs(x='Homology score',y='density') +theme(legend.position='top') #labs(x=subNames[i]
-    }
+    datFeature <- rbind(in1,in2)
+		datFeature$Category<-subNames[i]
+
+		if (is.null(allDatFeature)){
+			allDatFeature<-datFeature
+		}else{
+			allDatFeature<-rbind(allDatFeature, datFeature)
+		}
   }
-  
-  do.call("grid.arrange", c(pS, nrow=1))
+
+	g <- ggplot(allDatFeature) + geom_histogram(aes(x=score,y=..density..,fill=Input),alpha=1,position='dodge' )
+	if (isNotHS) {
+		g <- g + geom_line(data=allDatNorm,aes(x,y,color=Region))
+	}
+	g <- g + labs(x='score', y='density') + facet_wrap(.~Category, scales="free") + theme_bw() +theme(legend.position='top',strip.background=element_blank()) 
+	
+	print(g)
 }
 
 ####################### Read in python-annotated files & derive GC% ###################
@@ -284,7 +300,7 @@ Secondary structure is predicted for a 100-bp genomic window and folding energy 
 ############ Energy ###################
 subNames <- c('delta_G37','delta_H')
 col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], paste(subNames,'mean',sep='_') )
-R_comp_ftPlot(col.ls2,fileNames,subNames)
+R_comp_ftPlot2(col.ls2,fileNames,subNames)
 ```
 
 ## Entropy
@@ -294,7 +310,7 @@ For a base site, Shannon entropy is employed to quantify the variability of n-me
 ############ Entropy ##################
 subNames <- c(paste0('Entropy',2:4))
 col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], paste(subNames,'mean',sep='_') )
-R_comp_ftPlot(col.ls2,fileNames,subNames)
+R_comp_ftPlot2(col.ls2,fileNames,subNames)
 ```
 
 ## GC content
@@ -304,7 +320,7 @@ For a base site, GC content is defined as the number of guanosines (G) and cytid
 ########## GC #################
 subNames <- c('gc')
 col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], paste(subNames,'mean',sep='_') )
-R_comp_ftPlot(col.ls2,fileNames,subNames)
+R_comp_ftPlot2(col.ls2,fileNames,subNames)
 ```
 
 ## Homology score (redundancy count)
@@ -314,6 +330,6 @@ For a base site, homology score is defined as the incidence of perfect or near-p
 ########## HS #################
 subNames <- c('HS')
 col.ls2 <- lapply(intv.ls2,function(x,cols) x[,cols,drop=F], paste(subNames,'mean',sep='_') )
-R_comp_ftPlot(col.ls2,fileNames,subNames)
+R_comp_ftPlot2(col.ls2,fileNames,subNames)
 ```
 
