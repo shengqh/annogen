@@ -55,11 +55,11 @@ wget -B https://cqsweb.app.vumc.org/download1/annotateGenome/hg38/ -i file.list
 
 You may download example target region files from:
 
-https://cqsweb.app.vumc.org/download1/annotateGenome/examples/
+https://cqsweb.app.vumc.org/download1/annotateGenome/
 
 ```
-wget https://cqsweb.app.vumc.org/download1/annotateGenome/examples/bed.list
-wget -B https://cqsweb.app.vumc.org/download1/annotateGenome/examples/ -i bed.list
+wget https://cqsweb.app.vumc.org/download1/annotateGenome/bed.list
+wget -B https://cqsweb.app.vumc.org/download1/annotateGenome/ -i bed.list
 ```
 
 # usage
